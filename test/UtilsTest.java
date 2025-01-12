@@ -36,7 +36,6 @@ class UtilsTest {
     static void setUp() {
         list1 = new ArrayList<>(List.of(new Alpha(Location.A, 1), new Beta(Location.A, 1))); // Same location
         list2 = new ArrayList<>(List.of(new Alpha(Location.B, 2), new Alpha(Location.C, 2)));// Same generation
-        list3 = new ArrayList<>(List.of(new Beta(Location.C, 5), new Gamma(Location.B, 5))); //Same Years
         list4 = new ArrayList<>(List.of(new Beta(Location.B, 1), new Gamma(Location.C, 5))); //All different
         list5 = new ArrayList<>(List.of(new Beta(Location.B, 1), new Beta(Location.B, 5))); //Same Location and generation, different years
         list6 = new ArrayList<>(List.of(new Alpha(Location.A, 1), new Beta(Location.B, 5), new Gamma(Location.C,5)));
@@ -44,8 +43,10 @@ class UtilsTest {
         historic1 = new Historic(Location.A, 1251); //metallic threshold above 1250
         historic2 = new Historic(Location.B, 1250);// metallic threshold exactly on 1250
         historic3 = new Historic(Location.C, 1000);// metallic threshold below 1250
-        historic4 = new Historic(Location.A, 5000);// metallic threshold below 1250
+        historic4 = new Historic(Location.A, 5000);
         historic5 = new Historic(Location.A, 1000);// metallic threshold below 1250
+        list3 = new ArrayList<>(List.of(new Beta(Location.C, 5), new Gamma(Location.B, 5))); //Same Years
+
 
     }
     private static RecyclingProperties extractProperties(List<Recycling> recyclingList) {
@@ -193,8 +194,17 @@ class UtilsTest {
     @CsvSource(value={"Gamma, Alpha",
             "Beta,Alpha"
     })
-    void compareGenerations(String gen1, String gen2 ) {
+    void compareGenerationsFirstTest(String gen1, String gen2 ) {
         assertTrue(Utils.compareGenerations(gen1, gen2)>0);
+        assertTrue(Utils.compareGenerations(gen2, gen1)<0);
+    }
+    @ParameterizedTest
+    @CsvSource(value={"Gamma, Gamma",
+
+    })
+    void compareGenerationsSecondTest(String gen1, String gen2 ) {
+        assertTrue(Utils.compareGenerations(gen1, gen2)==0);
+
     }
 
     @ParameterizedTest
@@ -254,11 +264,11 @@ class UtilsTest {
     @Test
     void test1CalculateProcessDuration() {
         // Arrange
-        Historic historic = new Historic(Location.A, 5000); // Example with 5000 units of waste
+        Historic historic = new Historic(Location.A, 1251);
 
 
 
-        Recycling recyclingCentre = new Alpha(Location.B, 10);
+        Recycling recyclingCentre = new Alpha(Location.A, 10);
 
         double actualDuration = Utils.calculateProcessDuration(historic, recyclingCentre);
 
@@ -268,7 +278,7 @@ class UtilsTest {
     @Test
     void test2CalculateProcessDuration() {
         // Arrange
-        Historic historic = new Historic(Location.A, 2000); // Example with 5000 units of waste
+        Historic historic = new Historic(Location.A, 1250);
 
 
 
@@ -284,12 +294,14 @@ class UtilsTest {
 
     @ParameterizedTest
     @MethodSource("invalidFindViableCentresData")
-    void findViableCentresInvalidCases(Historic historic, List<Recycling> candidateCentres) {
+    void findViableCentresWithEmptyRecyclingList(Historic historic, List<Recycling> candidateCentres) {
         assertTrue(Utils.findViableCentres(historic, candidateCentres).isEmpty());
     }
 
     static Stream<Arguments> invalidFindViableCentresData() {
         return Stream.of(
+                Arguments.of((List<Recycling>) null), // Null candidate centres
+
 
                 Arguments.of(historic1, new ArrayList<>()) // Empty list
         );
@@ -299,12 +311,14 @@ class UtilsTest {
 
     @ParameterizedTest
     @MethodSource("invalidFindNearestCentresData")
-    void findNearestCentresInvalidCases(Historic historic, List<Recycling> candidateCentres) {
+    void findNearestCentresWithEmptyRecyclingList(Historic historic, List<Recycling> candidateCentres) {
         assertTrue(Utils.findNearestCentres(historic, candidateCentres).isEmpty());
     }
 
     static Stream<Arguments> invalidFindNearestCentresData() {
         return Stream.of(
+                Arguments.of((List<Recycling>) null), // Null candidate centres
+
 
                 Arguments.of(historic1, new ArrayList<>()) // Empty list
         );
@@ -312,20 +326,21 @@ class UtilsTest {
 
     @ParameterizedTest
     @MethodSource("invalidFindHighestGenerationsData")
-    void testFindHighestGenerationsInvalidCases(List<Recycling> candidateCentre) {
+    void testFindHighestGenerationsWithEmptyRecyclingList(List<Recycling> candidateCentre) {
         assertTrue(Utils.findHighestGenerations(candidateCentre).isEmpty());
     }
 
     static Stream<Arguments> invalidFindHighestGenerationsData() {
         return Stream.of(
                 Arguments.of((List<Recycling>) null), // Null candidate centres
+
                 Arguments.of(new ArrayList<>()) // Empty list
         );
     }
 
     @ParameterizedTest
     @MethodSource("invalidFindLeastYearsActiveData")
-    void findLeastYearsActiveInvalidCases(List<Recycling> candidateCentre) {
+    void findLeastYearsActiveWithEmptyRecyclingList(List<Recycling> candidateCentre) {
         assertTrue(Utils.findLeastYearsActive(candidateCentre).isEmpty());
     }
 
